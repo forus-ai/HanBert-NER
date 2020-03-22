@@ -46,12 +46,12 @@ Hyperparameter는 main.py에 있는 것을 그대로 사용하였습니다
 
 |                   | Slot F1 (%) |
 | ----------------- | ----------- |
-| HanBert-54kN      | **84.84**   |
-| HanBert-54kN-IP   | 84.45       |
-| KoBERT            | 84.23       |
-| DistilKoBERT      | 82.14       |
-| Bert-Multilingual | 81.78       |
-| BiLSTM-CRF        | 76.45       |
+| HanBert-54kN      | **87.31**   |
+| HanBert-54kN-IP   | 86.57       |
+| KoBERT            | 86.11       |
+| DistilKoBERT      | 84.13       |
+| Bert-Multilingual | 84.20       |
+| BiLSTM-CRF        | 74.57       |
 
 ## References
 
