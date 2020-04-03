@@ -128,7 +128,6 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
     # Setting based on the current model type
     cls_token = tokenizer.cls_token
     sep_token = tokenizer.sep_token
-    unk_token = tokenizer.unk_token
     pad_token_id = tokenizer.pad_token_id
 
     features = []
@@ -141,11 +140,11 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
         label_ids = []
         for word, slot_label in zip(example.words, example.labels):
             word_tokens = tokenizer.tokenize(word)
-            if not word_tokens:
-                word_tokens = [unk_token]  # For handling the bad-encoded word
-            tokens.extend(word_tokens)
-            # Use the real label id for the first token of the word, and padding ids for the remaining tokens
-            label_ids.extend([int(slot_label)] + [pad_token_label_id] * (len(word_tokens) - 1))
+            # bert-base-multilingual-cased sometimes output "nothing ([]) when calling tokenize with just a space
+            if len(word_tokens) > 0:
+                tokens.extend(word_tokens)
+                # Use the real label id for the first token of the word, and padding ids for the remaining tokens
+                label_ids.extend([int(slot_label)] + [pad_token_label_id] * (len(word_tokens) - 1))
 
         # Account for [CLS] and [SEP]
         special_tokens_count = 2
@@ -207,6 +206,7 @@ def load_and_cache_examples(args, tokenizer, mode):
     cached_file_name = 'cached_{}_{}_{}_{}'.format(
         args.task, list(filter(None, args.model_name_or_path.split("/"))).pop(), args.max_seq_len, mode)
 
+    pad_token_label_id = torch.nn.CrossEntropyLoss().ignore_index
     cached_features_file = os.path.join(args.data_dir, cached_file_name)
     if os.path.exists(cached_features_file):
         logger.info("Loading features from cached file %s", cached_features_file)
@@ -222,10 +222,9 @@ def load_and_cache_examples(args, tokenizer, mode):
         else:
             raise Exception("For mode, Only train, dev, test is available")
 
-        features = convert_examples_to_features(examples, args.max_seq_len, tokenizer)
+        features = convert_examples_to_features(examples, args.max_seq_len, tokenizer, pad_token_label_id=pad_token_label_id)
         logger.info("Saving features into cached file %s", cached_features_file)
         torch.save(features, cached_features_file)
-
 
     # Convert to Tensors and build dataset
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -233,6 +232,5 @@ def load_and_cache_examples(args, tokenizer, mode):
     all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
     all_label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long)
 
-    dataset = TensorDataset(all_input_ids, all_attention_mask,
-                            all_token_type_ids, all_label_ids)
+    dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_label_ids)
     return dataset

@@ -6,13 +6,12 @@ import torch
 import numpy as np
 from seqeval.metrics import precision_score, recall_score, f1_score, classification_report
 
-from transformers import BertConfig
+from transformers import BertConfig, BertForTokenClassification
 from tokenization_hanbert import HanBertTokenizer
 
-from model import BertClassifier
 
 MODEL_CLASSES = {
-    'hanbert': (BertConfig, BertClassifier, HanBertTokenizer)
+    'hanbert': (BertConfig, BertForTokenClassification, HanBertTokenizer)
 }
 
 
